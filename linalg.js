@@ -1,19 +1,17 @@
-//Linear Algebra Library by @keobkeig
-//
-//Matrix class
+//Linear Algebra Library by @keobkeig, 2023
+//Matrix class (rows, cols, matrix)
 
-
-//methods:
-    // Trace finder 
-    // Linear eqs into coefficient matrix
-    // augumented matrix into gaussian elimination 
-    // algebraic operations with matrixes (addition, subtraction, multiplication)
+//planned methods:
+    // Trace finder  ✔️
+    // Linear eqs into coefficient matrix 
+    // augumented matrix into gaussian elimination ✔️
+    // algebraic operations with matrixes (addition, subtraction, multiplication) ✔️
     // find inverse of matrixes if possible (return inverse matrix), uses formula for 2x2 to speed up 
-    // check if transpose
+    // check if transpose ✔️
     // check if antisymmetric
     // triangle matrix area (1/2 * abs of determinant)
     // quadilateral matrix (abs of determinant)
-    // cross product of vectors
+    // cross product of vectors 
     // volume of parallelpiped (abs triple scalar product)
     // dot product of vectors
     // angle between vectors
@@ -111,7 +109,6 @@ function Matrix(...args) {
         }
     }
 
-    //toString method
     this.toString = function() {
         for(let i = 0; i < this.rows; i++) {
             let row = '[';
@@ -122,6 +119,128 @@ function Matrix(...args) {
             console.log(row);
         }
     }
+
+    this.transpose = function() {
+        let newMatrix = new Matrix(this.cols, this.rows);
+        for(let i = 0; i < this.rows; i++) {
+            for(let j = 0; j < this.cols; j++) {
+                newMatrix.matrix[j][i] = this.matrix[i][j];
+            }
+        }
+        return newMatrix;
+    }
+
+    this.guassElim = function() {
+        let newMatrix = new Matrix(this.rows, this.cols);
+        newMatrix.populate(this.matrix);
+        for(let i = 0; i < newMatrix.rows; i++) {
+            //find first non-zero element in row
+            for(let j = 0; j < newMatrix.cols; j++) {
+                if(newMatrix.matrix[i][j] !== 0) {
+                    //try to get 1 in first non-zero element
+                    let temp = newMatrix.matrix[i][j];
+                    for(let k = 0; k < newMatrix.cols; k++) {
+                        newMatrix.matrix[i][k] /= temp;
+                    }
+                    break;
+                }
+            }
+            //subtract first row from all other rows to get 0s
+            for(let j = 0; j < newMatrix.rows; j++) {
+                if(j !== i) {
+                    let temp = newMatrix.matrix[j][i];
+                    for(let k = 0; k < newMatrix.cols; k++) {
+                        newMatrix.matrix[j][k] -= temp * newMatrix.matrix[i][k];
+                    }
+                }
+            }
+        }
+        return newMatrix;
+    }
+    
+    this.determinant = function() {
+        //formula of ad - bc for 2x2 matrix of [a b],[c d]
+        if(this.rows === 2 && this.cols === 2) {
+            return this.matrix[0][0] * this.matrix[1][1] - this.matrix[0][1] * this.matrix[1][0];
+        }
+        //cofactor expansion for larger matrixes, recurses until 2x2 matrix
+        else {
+            let determinant = 0;
+            for(let i = 0; i < this.cols; i++) {
+                let subMatrix = new Matrix(this.rows - 1, this.cols - 1);
+                for(let j = 1; j < this.rows; j++) {
+                    for(let k = 0; k < this.cols; k++) {
+                        if(k < i) {
+                            subMatrix.matrix[j - 1][k] = this.matrix[j][k];
+                        }
+                        else if(k > i) {
+                            subMatrix.matrix[j - 1][k - 1] = this.matrix[j][k];
+                        }
+                    }
+                }
+                determinant += Math.pow(-1, i) * this.matrix[0][i] * subMatrix.determinant();
+            }
+            return determinant;
+        }
+    }
+
+    this.trace = function() {
+        //finds the sum of THE diagonal elements of square matrix
+        if(this.rows === this.cols) {
+            let trace = 0;
+            for(let i = 0; i < this.rows; i++) {
+                trace += this.matrix[i][i];
+            }
+            return trace;
+        }
+    }
+
+    this.add = function(matrix) {
+        let newMatrix = new Matrix(this.rows, this.cols);
+        if(this.rows === matrix.rows && this.cols === matrix.cols) {
+            for(let i = 0; i < this.rows; i++) {
+                for(let j = 0; j < this.cols; j++) {
+                    newMatrix.matrix[i][j] = this.matrix[i][j] + matrix.matrix[i][j];
+                }
+            }
+            return newMatrix;
+        }
+        else return new Error('Matrix dimensions must match');
+    }
+
+    this.subtract = function(matrix) {
+        let newMatrix = new Matrix(this.rows, this.cols);
+        if(this.rows === matrix.rows && this.cols === matrix.cols) {
+            for(let i = 0; i < this.rows; i++) {
+                for(let j = 0; j < this.cols; j++) {
+                    newMatrix.matrix[i][j] = this.matrix[i][j] - matrix.matrix[i][j];
+                }
+            }
+            return newMatrix;
+        }
+        else return new Error('Matrix dimensions must match');
+    }
+
+    this.multiply = function(matrix) {
+        let newMatrix = new Matrix(this.rows, matrix.cols);
+        //cols of this matrix must equal rows of matrix for multiplication to be possible
+        if(this.cols === matrix.rows) {
+            for(let i = 0; i < this.rows; i++) {
+                for(let j = 0; j < matrix.cols; j++) {
+                    let sum = 0;
+                    for(let k = 0; k < this.cols; k++) {
+                        //dot product of row i of this matrix and column j of matrix
+                        sum += this.matrix[i][k] * matrix.matrix[k][j];
+                    }
+                    newMatrix.matrix[i][j] = sum;
+                }
+            }
+            return newMatrix;
+        }
+        else return new Error('Matrix dimensions must match');
+    }
+
+    
 }
 
 //test matrixs
@@ -131,8 +250,11 @@ const matrix1 = new Matrix(1);
 
 const vectorMatrix = new Matrix(new Array([2, 3, 1]));
 
-const square = new Matrix(new Array([1, 2], 
+const square1 = new Matrix(new Array([1, 2], 
                                     [3, 4]));
+const square2 = new Matrix(new Array([1, 2], 
+    [3, 4]));
+console.log(square1.add(square2).toString());
 
 const zero = new Matrix(0, 0);
 
