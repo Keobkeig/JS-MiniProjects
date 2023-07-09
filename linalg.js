@@ -6,11 +6,11 @@
     // Linear eqs into coefficient matrix 
     // augumented matrix into gaussian elimination ✔️
     // algebraic operations with matrixes (addition, subtraction, multiplication) ✔️
-    // find inverse of matrixes if possible (return inverse matrix), uses formula for 2x2 to speed up 
+    // find inverse of matrixes if possible (return inverse matrix), uses formula for 2x2 to speed up ✔️ 
     // check if transpose ✔️
-    // check if antisymmetric
-    // triangle matrix area (1/2 * abs of determinant)
-    // quadilateral matrix (abs of determinant)
+    // check if symmetric ✔️
+    // triangle matrix area (1/2 * abs of determinant) ✔️
+    // quadilateral matrix (abs of determinant) ✔️
     // cross product of vectors 
     // volume of parallelpiped (abs triple scalar product)
     // dot product of vectors
@@ -133,8 +133,8 @@ function Matrix(...args) {
     this.guassElim = function() {
         let newMatrix = new Matrix(this.rows, this.cols);
         newMatrix.populate(this.matrix);
+        //find first non-zero element in row 
         for(let i = 0; i < newMatrix.rows; i++) {
-            //find first non-zero element in row
             for(let j = 0; j < newMatrix.cols; j++) {
                 if(newMatrix.matrix[i][j] !== 0) {
                     //try to get 1 in first non-zero element
@@ -145,8 +145,9 @@ function Matrix(...args) {
                     break;
                 }
             }
-            //subtract first row from all other rows to get 0s
+        
             for(let j = 0; j < newMatrix.rows; j++) {
+                //subtract from all other rows to get 0s
                 if(j !== i) {
                     let temp = newMatrix.matrix[j][i];
                     for(let k = 0; k < newMatrix.cols; k++) {
@@ -240,7 +241,79 @@ function Matrix(...args) {
         else return new Error('Matrix dimensions must match');
     }
 
-    
+    this.inverse = function() {
+        let newMatrix = new Matrix(this.rows, this.cols + this.cols);
+        newMatrix.populate(this.matrix);
+        //make right side of matrix the identity matrix 
+        for(let i = 0; i < this.rows; i++) {
+            for(let j = this.cols; j < newMatrix.cols; j++) {
+                if(j - this.cols === i) {
+                    newMatrix.matrix[i][j] = 1;
+                }
+                else newMatrix.matrix[i][j] = 0;
+            }
+        }
+        newMatrix = newMatrix.guassElim();
+        //return right side of matrix
+        let inverse = new Matrix(this.rows, this.cols);
+        for(let i = 0; i < this.rows; i++) {
+            for(let j = this.cols; j < newMatrix.cols; j++) {
+                inverse.matrix[i][j - this.cols] = newMatrix.matrix[i][j];
+            }
+        }
+        return inverse;
+    }
+
+    this.isSymmetric = function() {
+        //transpose of matrix is equal to matrix
+        if(this.equals(this.transpose())) {
+            return true;
+        }
+        else return false;
+    }
+
+    this.triangleArea = function() {
+        //check if matrix represents 3 points in 2d space
+        if(this.rows === 3 && this.cols === 2) {
+            let matrix = new Matrix(3, 3);
+            matrix.populate(this.matrix);
+            matrix.matrix[0][2] = 1;
+            matrix.matrix[1][2] = 1;
+            matrix.matrix[2][2] = 1;
+            matrix.print();
+            return 0.5 * matrix.determinant();
+        }
+        else if (this.rows === 2 && this.cols === 3) {
+            let matrix = new Matrix(3, 3);
+            matrix.populate(this.matrix);
+            matrix.matrix[0][2] = matrix.matrix[1][2] = matrix.matrix[2][2] = 1;
+            matrix.print();
+            return 0.5 * matrix.determinant();
+        }
+        else return new Error('Matrix representing triangle must be 3x2');
+    }
+
+    this.quadArea = function() {
+        //check if matrix represents 4 points in 2d space
+        if(this.rows === 4 && this.cols === 2) {
+            let matrix = new Matrix(4, 4);
+            matrix.populate(this.matrix);
+            matrix.matrix[0][2] = matrix.matrix[1][2] = matrix.matrix[2][2] = matrix.matrix[3][2] = 1;
+            matrix.matrix[0][3] = matrix.matrix[1][3] = matrix.matrix[2][3] = matrix.matrix[3][3] = 1;
+            matrix.print();
+            return 0.5 * matrix.determinant();
+        }
+        else if (this.rows === 2 && this.cols === 4) {
+            let matrix = new Matrix(4, 4);
+            matrix.populate(this.matrix);
+            matrix.matrix[0][2] = matrix.matrix[1][2] = matrix.matrix[2][2] = matrix.matrix[3][2] = 1;
+            matrix.matrix[0][3] = matrix.matrix[1][3] = matrix.matrix[2][3] = matrix.matrix[3][3] = 1;
+            matrix.print();
+            return 0.5 * matrix.determinant();
+        }
+        else return new Error('Matrix representing quadrilateral must be 4x2');
+    }
+
 }
 
 //test matrixs
